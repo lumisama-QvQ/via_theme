@@ -1,0 +1,154 @@
+
+<style type="text/css">
+div p {
+    text-align: center;
+    /* “粉-蓝-紫”梦幻渐变 - 核心视觉风格 */
+    background: -webkit-linear-gradient(left, #ff9a9e 0%, #fecfef 20%, #a1c4fd 40%, #c2e9fb 60%, #fecfef 80%, #ff9a9e 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    -webkit-background-size: 200% 100%;
+    /* 动画：让渐变色流动起来 */
+    -webkit-animation: runs 5s infinite linear;
+
+    /* 强力光晕效果，增强夜间模式的质感 */
+    filter: drop-shadow(0 0 8px rgba(254, 207, 239, 0.6));
+    font-weight: bold;
+}
+@-webkit-keyframes runs {
+    0% { background-position: 0 0; }
+    100% { background-position: 100% 0; }
+}
+</style>
+
+<div id="miracle_box" style="position: absolute; top: -32vw; width: 100%; text-align: center; font-size: 32px; transition: opacity 0.5s">
+    <p>你的存在便是奇迹</p>
+</div>
+
+<script>
+(function() { // 使用立即执行函数包裹，防止变量污染全局
+
+    // 配置：搜索引擎列表
+    const engines = {
+        i: { name: "默认", url: "" },
+        bd: { name: "百度", url: "https://m.baidu.com/s?word=" },
+        gg: { name: "谷歌", url: "https://www.google.com/search?query=" },
+        bing: { name: "必应", url: "https://cn.bing.com/search?q=" },
+        dk: { name: "Duck", url: "https://duckduckgo.com/?q=" },
+        gk: { name: "夸克", url: "https://quark.sm.cn/s?q=" },
+        sg: { name: "搜狗", url: "https://m.sogou.com/web/searchList.jsp?keyword=" },
+        zh: { name: "知乎", url: "https://www.zhihu.com/search?q=" },
+        // c 代表自定义，读取本地存储
+        c: { name: "其他", url: localStorage.getItem("c") || "" },
+        m: { name: "重设", disabled: (!localStorage.getItem("c") || localStorage.getItem("se") !== "c") }
+    };
+
+    // 主初始化函数
+    window.addEventListener("DOMContentLoaded", function() {
+        const s_input = document.getElementById("search_input");
+        const m_box = document.getElementById("miracle_box");
+        const content = document.getElementById("content");
+        const s_submit = document.getElementById("search_submit");
+
+        // 1. 移动标语到 content 容器内 (如果 content 存在)
+        if (content && m_box && m_box.parentNode !== content) {
+            content.appendChild(m_box);
+        }
+
+        // 2. 搜索框焦点交互：输入时隐藏标语
+        if (s_input && m_box) {
+            s_input.addEventListener("focus", () => {
+                m_box.style.opacity = "0";
+                m_box.style.transform = "translateY(-20px)"; // 上浮消失
+            });
+            s_input.addEventListener("blur", () => {
+                m_box.style.opacity = "1";
+                m_box.style.transform = "translateY(0)"; // 下沉归位
+            });
+
+            // 3. 设置占位符 (移除了 setTimeout，直接执行)
+            s_input.setAttribute('placeholder', '星河浩瀚,万人争渡');
+        }
+
+        // 4. 搜索引擎切换器逻辑
+        if (s_submit) {
+            const select = document.createElement("select");
+
+            // 样式设置
+            Object.assign(select.style, {
+                color: "#FFFFFF",
+                float: "left",
+                height: "46px",
+                border: "none",
+                paddingLeft: "10px",
+                background: "transparent",
+                outline: "none",
+                borderRadius: "inherit"
+            });
+
+            // 生成选项
+            let optionsHTML = "";
+            for (let key in engines) {
+                const item = engines[key];
+                const disabledStr = item.disabled ? "disabled" : "";
+                optionsHTML += `<option value="${key}" ${disabledStr}>${item.name}</option>`;
+            }
+            select.innerHTML = optionsHTML;
+
+            // 恢复上次选择
+            select.value = localStorage.getItem("se") || "i";
+
+            // 切换事件
+            select.onchange = function() {
+                const val = this.value;
+                if (val !== "c" && val !== "m") {
+                    localStorage.setItem("se", val);
+                    // 只有非自定义时，重置按钮状态
+                    this.lastElementChild.disabled = true;
+                } else {
+                    // 处理自定义逻辑
+                    let customUrl = prompt("请修改自定义地址\n注：via上取消也可能会清空(′⊙ω⊙`)", localStorage.getItem("c") || "");
+                    customUrl = (customUrl || "").trim();
+
+                    if (customUrl) {
+                        localStorage.setItem("c", customUrl);
+                        localStorage.setItem("se", "c");
+                        this.value = "c";
+                    } else {
+                        // 如果用户取消或输入空，回退到默认
+                        this.value = "i";
+                    }
+                }
+            };
+
+            // 插入到提交按钮之前
+            s_submit.parentElement.insertBefore(select, s_submit);
+
+            // 5. 覆盖 Via 默认搜索函数
+            window.search = function() {
+                const val = s_input.value.trim();
+                const currentEngine = engines[select.value];
+                if (val) {
+                    // 如果有前缀url就拼接，没有就执行默认逻辑
+                    s_input.value = currentEngine.url + val;
+                    // 这里引用原始的 search 函数，通过闭包保存引用比较复杂，
+                    // 简单做法是直接让 Via 提交表单或跳转
+                    return true;
+                }
+                return false;
+            };
+        }
+    });
+})();
+</script>
+
+<script src="https://widget.qweather.net/standard/static/js/he-standard-common.js?v=2.0"></script>
+<script>
+    // 异步获取古诗词
+    fetch('https://v1.jinrishici.com/all.txt')
+        .then(response => response.text())
+        .then(text => {
+            const titleElement = document.getElementsByTagName("title")[0];
+            if(titleElement) titleElement.innerText = text;
+        })
+        .catch(err => console.log("诗词获取失败", err));
+</script>

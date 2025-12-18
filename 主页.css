@@ -1,0 +1,206 @@
+/* --- 全局变量配置 --- */
+:root {
+  --contenttop: 68vw;          /* 内容区域距离顶部的距离 */
+  --searchbarmove: 20vw;       /* 激活时搜索框移动距离 */
+  --submitmove: 76vw;          /* 提交按钮位置 */
+  --searchbaradius: 16px;      /* 圆角大小 */
+  --searchbarwidth: 92vw;      /* 搜索框宽度 */
+  --searchbarblur: 18px;       /* 毛玻璃模糊度 */
+  --sugposition: 1vw;          /* 联想词位置修正 */
+}
+
+/* --- 内容容器定位 --- */
+#content {
+  position: fixed;
+  top: var(--contenttop);
+}
+
+/* 搜索栏激活时的文字颜色 */
+.search_bar_active {
+  color: #fff;
+}
+
+/* =========================================
+   搜索建议框 (Suggestion Box) - 核心复杂区域
+   ========================================= */
+.opSug_wpr {
+  /* --- 布局与定位 --- */
+  width: 92vw !important;
+  /* 计算位置，预留底部空间 */
+  bottom: calc(var(--sugposition) - 55px) !important;
+  padding-bottom: 55px !important;
+
+  /* --- 视觉风格 (玻璃拟态) --- */
+  border-radius: 24px 24px 12px 12px !important;
+  border: 1px solid rgba(255, 255, 255, 0.2) !important;
+  border-bottom: none !important;
+  z-index: 0 !important;
+  background: rgba(255, 255, 255, 0.15) !important;
+  box-shadow: 0 -8px 25px rgba(0, 0, 0, 0.08);
+  backdrop-filter: blur(15px);
+  -webkit-backdrop-filter: blur(15px);
+  color: #fff;
+  max-height: 300px !important;
+
+  /* --- 居中处理 --- */
+  left: 0 !important;
+  right: 0 !important;
+  margin: 0 auto !important;
+
+  /* --- 动画核心：从底部向上生长 --- */
+  transform-origin: bottom center;
+  will-change: transform, opacity;
+  /* 错峰动画：延迟0.2秒等待搜索框到位后再弹出 */
+  animation: sug-pop-up 0.35s cubic-bezier(0.2, 0.8, 0.2, 1) 0.2s both;
+}
+
+/* =========================================
+   搜索栏 (Search Bar)
+   ========================================= */
+.search_bar {
+  /* 基础背景与边框 */
+  background: rgba(255, 255, 255, 0.12) !important;
+  border: 0.5px solid rgba(255, 255, 255, 0.25);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+
+  /* 尺寸与圆角 */
+  width: var(--searchbarwidth) !important;
+  border-radius: var(--searchbaradius) !important;
+  height: 50px;
+  line-height: 50px;
+
+  /* 毛玻璃效果 */
+  backdrop-filter: blur(15px);
+  -webkit-backdrop-filter: blur(15px);
+
+  /* 初始位置与层级 */
+  transform: translateY(0);
+  position: relative;
+  z-index: 10 !important;
+
+  /* 平滑过渡动画 */
+  transition:
+    transform 0.3s cubic-bezier(0.25, 1, 0.5, 1),
+    width 0.3s ease,
+    background 0.3s ease,
+    box-shadow 0.3s ease,
+    border-radius 0.3s ease;
+}
+
+/* 搜索栏激活状态 (输入时) */
+.search_bar:focus-within {
+  width: var(--searchbarwidth);
+  background: rgba(255, 255, 255, 0.25) !important;
+
+  /* 增强光晕，提升浮动感 */
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.4);
+
+  /* 下移位置 */
+  transform: translateY(var(--searchbarmove));
+
+  transition:
+    transform 0.3s cubic-bezier(0.25, 1, 0.5, 1),
+    width 0.3s ease,
+    background 0.3s ease,
+    box-shadow 0.3s ease;
+}
+
+/* 搜索输入框 Placeholder 样式 */
+#search_input::-webkit-input-placeholder {
+    color: rgba(255, 255, 255, 0.6) !important;
+    opacity: 1;
+}
+
+/* =========================================
+   提交按钮 (Submit Button)
+   ========================================= */
+#search_submit {
+  position: absolute !important;
+  z-index: 1;
+  display: block !important;
+  left: 80vw;
+  opacity: 0;
+  visibility: hidden;
+  /* 延迟出现的过渡效果 */
+  transition:
+    left 0.9s cubic-bezier(0.68, -0.55, 0.27, 1.55),
+    opacity 0.6s ease-out,
+    visibility 0.6s step-end;
+}
+
+/* =========================================
+   书签与列表项动画 (Bookmarks & Items)
+   ========================================= */
+#bookmark_part {
+  transform: translateY(0);
+  opacity: 1;
+  visibility: visible;
+  transition: transform 0.4s, opacity 0.4s, visibility 0.4s;
+}
+
+/* 建议项逐个出现的动画 */
+@keyframes item-appear {
+  0% {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* 建议列表内部布局 */
+.opSug_wpr tbody {
+  display: flex !important;
+  flex-direction: column-reverse !important; /* 核心：倒序排列，配合底部弹出的视觉 */
+  width: 100%;
+}
+
+.opSug_wpr tr {
+  display: block !important;
+  width: 100%;
+  border-bottom: none !important;
+}
+
+.opSug_wpr td {
+  display: block !important;
+  width: 100%;
+  box-sizing: border-box;
+  animation: item-appear 0.25s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+  opacity: 0;
+  transition: background 0.1s;
+}
+
+/* 建议项动画延迟 (实现流水线效果) */
+.opSug_wpr tr:nth-child(1) td { animation-delay: 0ms; }
+.opSug_wpr tr:nth-child(2) td { animation-delay: 30ms; }
+.opSug_wpr tr:nth-child(3) td { animation-delay: 60ms; }
+.opSug_wpr tr:nth-child(4) td { animation-delay: 90ms; }
+.opSug_wpr tr:nth-child(5) td { animation-delay: 120ms; }
+
+/* 调整第一个元素(视觉上的最下方)的间距 */
+.opSug_wpr tr:first-child td {
+  padding-bottom: 10px !important;
+}
+
+/* 点击反馈 */
+.opSug_wpr tr:active, .opSug_wpr td:active {
+  background: rgba(255, 255, 255, 0.25) !important;
+}
+
+/* =========================================
+   全局动画定义
+   ========================================= */
+/* 建议框整体弹出动画：类似打印纸吐出，不改变宽度 */
+@keyframes sug-pop-up {
+  0% {
+    opacity: 0;
+    transform: scale3d(1, 0, 1);
+  }
+  100% {
+    opacity: 1;
+    transform: scale3d(1, 1, 1);
+  }
+}
